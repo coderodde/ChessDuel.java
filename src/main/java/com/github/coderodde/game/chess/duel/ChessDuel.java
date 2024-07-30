@@ -17,7 +17,7 @@ public class ChessDuel {
 
     public static void main(String[] args) {
         
-        int currentDepth = 3;
+        int currentDepth = 2;
         
         final HeuristicFunction heuristicFunction =
                 new DefaultHeuristicFunction();
@@ -28,13 +28,18 @@ public class ChessDuel {
         ChessBoardState state = new ChessBoardState();
         PlayerTurn currentPlayerTurn = PlayerTurn.WHITE;
         
-        System.out.println(state);
+        int plyNumber = 1;
         
         while (true) {
-            System.out.println("PLY");
+            System.out.printf("[STATUS] Ply number: %d.\n", plyNumber++);
+            
+            System.out.println(state);
             
             if (state.isCheckMate(currentPlayerTurn)) {
-                System.out.println("[STATUS] White player won!");
+                final String playerColorName = 
+                        getPlayerColorName(currentPlayerTurn);
+                
+                System.out.printf("[STATUS] %s player won!\n", playerColorName);
                 return;
             }
             
@@ -44,19 +49,25 @@ public class ChessDuel {
                                   currentDepth, 
                                   currentPlayerTurn);
             
+            if (state == null) {
+                throw new IllegalStateException("state == null");
+            }
+            
             final long computationEndTime = System.currentTimeMillis();
             final long computationDuration = computationEndTime - 
                                              computationStartTime;
             
-            if (computationDuration < 1000) {
-                currentDepth++;
-            } else if (computationDuration > 5000) {
-                currentDepth = Math.max(1, currentDepth - 1);
-            }
+//            if (computationDuration < 500) {
+//                currentDepth++;
+//            } else if (computationDuration > 5000) {
+//                currentDepth = Math.max(2, currentDepth - 1);
+//            }
+            
+            System.out.printf("%s player ply in %d milliseconds.\n",
+                              getPlayerColorName(currentPlayerTurn),
+                              computationDuration);
             
             currentPlayerTurn = flipCurrentPlayerTurn(currentPlayerTurn);
-            
-            System.out.println(state);
         }
     }
     
@@ -65,5 +76,16 @@ public class ChessDuel {
         return currentPlayerTurn == PlayerTurn.WHITE ?
                 PlayerTurn.BLACK :
                 PlayerTurn.WHITE;
+    }
+        
+    private static String 
+        getPlayerColorName(final PlayerTurn currentPlayerTurn) {
+        if (currentPlayerTurn == PlayerTurn.WHITE) {
+            return "White";
+        } else if (currentPlayerTurn == PlayerTurn.BLACK) {
+            return "Black";
+        } else {
+            throw new IllegalStateException("Should not get here.");
+        }
     }
 }
