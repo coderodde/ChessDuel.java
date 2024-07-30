@@ -17,7 +17,7 @@ public class ChessDuel {
 
     public static void main(String[] args) {
         
-        int currentDepth = 2;
+        int currentDepth = 3;
         
         final HeuristicFunction heuristicFunction =
                 new DefaultHeuristicFunction();
