@@ -4,6 +4,7 @@ import com.github.coderodde.game.chess.AbstractGameEngine;
 import com.github.coderodde.game.chess.ChessBoardState;
 import com.github.coderodde.game.chess.HeuristicFunction;
 import com.github.coderodde.game.chess.PlayerTurn;
+import com.github.coderodde.game.chess.ThreeFoldRepetionRuleDrawException;
 import com.github.coderodde.game.chess.impl.DefaultHeuristicFunction;
 import com.github.coderodde.game.chess.impl.engine.AlphaBetaPruningGameEngine;
 
@@ -14,10 +15,10 @@ import com.github.coderodde.game.chess.impl.engine.AlphaBetaPruningGameEngine;
  * @since 1.0.0 (Jul 30, 2024)
  */
 public class ChessDuel {
+    
+    static final int MINIMUM_DEPTH = 2;
 
     public static void main(String[] args) {
-        
-        int currentDepth = 3;
         
         final HeuristicFunction heuristicFunction =
                 new DefaultHeuristicFunction();
@@ -27,6 +28,8 @@ public class ChessDuel {
         
         ChessBoardState state = new ChessBoardState();
         PlayerTurn currentPlayerTurn = PlayerTurn.WHITE;
+        
+        final Parameters parameters = Parameters.parseArguments(args);
         
         int plyNumber = 1;
         
@@ -45,9 +48,30 @@ public class ChessDuel {
             
             final long computationStartTime = System.currentTimeMillis();
             
-            state = engine.search(state, 
-                                  currentDepth, 
-                                  currentPlayerTurn);
+            try {
+                final int depth = currentPlayerTurn == PlayerTurn.WHITE ?
+                        parameters.whitePlayerEngineDepth :
+                        parameters.blackPlayerEngineDepth;
+                
+                final ChessBoardState previousChessBoardState = state;
+                
+                System.out.println("ply number: " + plyNumber);
+                
+                if (plyNumber == 3) {
+                    System.out.println("FUNKY STATE\n" + state);
+                }
+                
+                state = engine.search(state, 
+                                      depth, 
+                                      currentPlayerTurn);
+                
+            } catch (final ThreeFoldRepetionRuleDrawException ex) {
+                System.out.println(
+                        "[STATUS] Three-fold repetition rule "
+                        + "broken. It's a draw!");
+                
+                return;
+            }
             
             if (state == null) {
                 throw new IllegalStateException("state == null");
@@ -86,6 +110,40 @@ public class ChessDuel {
             return "Black";
         } else {
             throw new IllegalStateException("Should not get here.");
+        }
+    }
+}
+
+class Parameters {
+    int whitePlayerEngineDepth;
+    int blackPlayerEngineDepth;
+    
+    static Parameters parseArguments(final String[] args) {
+        final Parameters parameters = new Parameters();
+        
+        switch (args.length) {
+            case 0:
+                parameters.whitePlayerEngineDepth = ChessDuel.MINIMUM_DEPTH;
+                parameters.blackPlayerEngineDepth = ChessDuel.MINIMUM_DEPTH;
+                return parameters;
+                
+            case 1:
+                parameters.whitePlayerEngineDepth = parseInteger(args[0]);
+                parameters.blackPlayerEngineDepth = ChessDuel.MINIMUM_DEPTH;
+                return parameters;
+                
+            default:
+                parameters.whitePlayerEngineDepth = parseInteger(args[0]);
+                parameters.blackPlayerEngineDepth = parseInteger(args[1]);
+                return parameters;
+        }
+    }
+    
+    private static int parseInteger(final String token) {
+        try {
+            return Math.max(ChessDuel.MINIMUM_DEPTH, Integer.parseInt(token));
+        } catch (final NumberFormatException ex) {
+            return ChessDuel.MINIMUM_DEPTH;
         }
     }
 }
