@@ -31,18 +31,36 @@ public class ChessDuel {
         
         final Parameters parameters = Parameters.parseArguments(args);
         
+        parameters.whitePlayerEngineDepth = 4;
+        parameters.blackPlayerEngineDepth = 4;
+        
+        System.out.printf("[INFO] White player engine depth: %d.\n",
+                          parameters.whitePlayerEngineDepth);
+        
+        System.out.printf("[INFO] Black player engine depth: %d.\n", 
+                          parameters.blackPlayerEngineDepth);
+        
         int plyNumber = 1;
         
         while (true) {
-            System.out.printf("[STATUS] Ply number: %d.\n", plyNumber++);
+            final String currentPlayerColorName = 
+                    getPlayerColorName(currentPlayerTurn);
+            
+            System.out.printf("[STATUS] Ply number: %d by %s player bot.\n", 
+                              plyNumber++, 
+                              currentPlayerColorName);
             
             System.out.println(state);
             
-            if (state.isCheckMate(currentPlayerTurn)) {
+            final PlayerTurn oppositePlayerTurn = 
+                    flipCurrentPlayerTurn(currentPlayerTurn);
+            
+            if (state.isCheckMate(oppositePlayerTurn)) {
                 final String playerColorName = 
                         getPlayerColorName(currentPlayerTurn);
                 
-                System.out.printf("[STATUS] %s player won!\n", playerColorName);
+                System.out.printf("[STATUS] %s player won!\n",
+                                  playerColorName);
                 return;
             }
             
@@ -52,15 +70,7 @@ public class ChessDuel {
                 final int depth = currentPlayerTurn == PlayerTurn.WHITE ?
                         parameters.whitePlayerEngineDepth :
                         parameters.blackPlayerEngineDepth;
-                
-                final ChessBoardState previousChessBoardState = state;
-                
-                System.out.println("ply number: " + plyNumber);
-                
-                if (plyNumber == 3) {
-                    System.out.println("FUNKY STATE\n" + state);
-                }
-                
+              
                 state = engine.search(state, 
                                       depth, 
                                       currentPlayerTurn);
@@ -87,8 +97,8 @@ public class ChessDuel {
 //                currentDepth = Math.max(2, currentDepth - 1);
 //            }
             
-            System.out.printf("%s player ply in %d milliseconds.\n",
-                              getPlayerColorName(currentPlayerTurn),
+            System.out.printf("[INFO] %s player ply in %d milliseconds.\n",
+                              currentPlayerColorName,
                               computationDuration);
             
             currentPlayerTurn = flipCurrentPlayerTurn(currentPlayerTurn);
